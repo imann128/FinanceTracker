@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Management App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+        .chart-container {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        .transaction-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Auth Section -->
+        <div id="authSection">
+            <h2>Login/Register</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <form id="authForm" class="mb-4">
+                        <input type="text" id="username" class="form-control mb-2" placeholder="Username" required>
+                        <input type="password" id="password" class="form-control mb-2" placeholder="Password" required>
+                        <input type="email" id="email" class="form-control mb-2" placeholder="Email (for registration)">
+                        <button type="button" onclick="login()" class="btn btn-primary me-2">Login</button>
+                        <button type="button" onclick="register()" class="btn btn-secondary">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Section -->
+        <div id="mainSection" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Welcome, <span id="userDisplay"></span></h2>
+                <div>
+                    Balance: $<span id="balanceDisplay">0</span>
+                    <button onclick="logout()" class="btn btn-outline-danger ms-3">Logout</button>
+                </div>
+            </div>
+
+            <!-- Add Transaction -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h3>Add Transaction</h3>
+                    <form id="transactionForm">
+                        <input type="number" id="amount" class="form-control mb-2" placeholder="Amount" required>
+                        <select id="type" class="form-control mb-2" required>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                        <input type="text" id="category" class="form-control mb-2" placeholder="Category" required>
+                        <input type="text" id="description" class="form-control mb-2" placeholder="Description">
+                        <input type="date" id="date" class="form-control mb-2" required>
+                        <button type="button" onclick="addTransaction()" class="btn btn-success">Add Transaction</button>
+                    </form>
+                </div>
+
+                <!-- Add Savings Goal -->
+                <div class="col-md-6">
+                    <h3>Add Savings Goal</h3>
+                    <form id="savingsForm">
+                        <input type="text" id="goalName" class="form-control mb-2" placeholder="Goal Name" required>
+                        <input type="text" id="goalCategory" class="form-control mb-2" placeholder="Category">
+                        <input type="number" id="targetAmount" class="form-control mb-2" placeholder="Target Amount" required>
+                        <input type="date" id="targetDate" class="form-control mb-2" required>
+                        <input type="number" id="initialAmount" class="form-control mb-2" placeholder="Initial Amount">
+                        <input type="number" id="monthlyContribution" class="form-control mb-2" placeholder="Monthly Contribution">
+                        <button type="button" onclick="addSavingsGoal()" class="btn btn-primary">Add Savings Goal</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Transactions and Goals Display -->
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Recent Transactions</h3>
+                    <select id="transactionDays" class="form-control mb-2" onchange="getTransactions()">
+                        <option value="7">Last Week</option>
+                        <option value="30">Last Month</option>
+                        <option value="90" selected>Last 3 Months</option>
+                    </select>
+                    <div id="transactionsList" class="transaction-list"></div>
+                </div>
+
+                <div class="col-md-6">
+                    <h3>Savings Goals</h3>
+                    <div id="savingsGoalsList"></div>
+                </div>
+            </div>
+
+            <!-- Visualizations -->
+            <div class="row mt-4">
+                <h3>Visualizations</h3>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h4>Category Distribution</h4>
+                        <img id="categoryChart" alt="Category Distribution">
+                    </div>
+                    <div class="chart-container">
+                        <h4>Monthly Trends</h4>
+                        <img id="monthlyChart" alt="Monthly Trends">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h4>Savings Progress</h4>
+                        <img id="savingsChart" alt="Savings Progress">
+                    </div>
+                    <div class="chart-container">
+                        <h4>Weekly Budget</h4>
+                        <img id="weeklyChart" alt="Weekly Budget">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        // Auth Functions
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentUser = data.user;
+                    showMainSection();
+                    refreshData();
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Login failed');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, email })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Registration successful. Please login.');
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Registration failed');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('mainSection').classList.add('hidden');
+            document.getElementById('authForm').reset();
+        }
+
+        // Transaction Functions
+        async function addTransaction() {
+            const data = {
+                username: currentUser.username,
+                amount: parseFloat(document.getElementById('amount').value),
+                type: document.getElementById('type').value,
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                date: document.getElementById('date').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/add_transaction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('transactionForm').reset();
+                    refreshData();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                alert('Failed to add transaction');
+            }
+        }
+
+        async function getTransactions() {
+            const days = document.getElementById('transactionDays').value;
+            try {
+                const response = await fetch(`http://localhost:5000/get_transactions?username=${currentUser.username}&days=${days}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayTransactions(data.transactions);
+                    updateBalance(data.summary.net_savings);
+                }
+            } catch (error) {
+                console.error('Failed to fetch transactions');
+            }
+        }
+
+        // Savings Goals Functions
+        async function addSavingsGoal() {
+            const data = {
+                username: currentUser.username,
+                name: document.getElementById('goalName').value,
+                // category: document.getElementById('goalCategory').value,
+                target_amount: parseFloat(document.getElementById('targetAmount').value),
+                target_date: document.getElementById('targetDate').value,
+                initial_amount: parseFloat(document.getElementById('initialAmount').value) || 0,
+                // monthly_contribution: parseFloat(document.getElementById('monthlyContribution').value) || 0
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/add_savings_goal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('savingsForm').reset();
+                    getSavingsGoals();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                alert('Failed to add savings goal');
+            }
+        }
+
+        async function getSavingsGoals() {
+            try {
+                const response = await fetch(`http://localhost:5000/get_savings_goals?username=${currentUser.username}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displaySavingsGoals(data.savings_goals);
+                }
+            } catch (error) {
+                console.error('Failed to fetch savings goals');
+            }
+        }
+
+        // Visualization Functions
+        async function loadVisualizations() {
+            const days = document.getElementById('transactionDays').value;
+            
+            // Load all charts
+            document.getElementById('categoryChart').src = `http://localhost:5000/visualize/category_distribution?username=${currentUser.username}&days=${days}`;
+            document.getElementById('monthlyChart').src = `http://localhost:5000/visualize/monthly_trends?username=${currentUser.username}&days=${days}`;
+            document.getElementById('savingsChart').src = `http://localhost:5000/visualize/savings_progress?username=${currentUser.username}`;
+            document.getElementById('weeklyChart').src = `http://localhost:5000/visualize/weekly_budget?username=${currentUser.username}`;
+        }
+
+        // Display Functions
+        function displayTransactions(transactions) {
+            const list = document.getElementById('transactionsList');
+            list.innerHTML = transactions.map(t => `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5 class="card-title">${t.category}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">${t.date}</h6>
+                        <p class="card-text">
+                            ${t.type === 'income' ? '+' : '-'}$${t.amount}
+                            ${t.description ? `<br>${t.description}` : ''}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displaySavingsGoals(goals) {
+            const list = document.getElementById('savingsGoalsList');
+            list.innerHTML = goals.map(g => `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5 class="card-title">${g.name}</h5>
+                        <p class="card-text">
+                            Progress: $${g.current_amount} / $${g.target_amount}
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: ${g.progress_percentage}%">
+                                    ${g.progress_percentage.toFixed(1)}%
+                                </div>
+                            </div>
+                            Status: ${g.status}
+                            ${g.months_remaining ? `<br>Months remaining: ${g.months_remaining}` : ''}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateBalance(balance) {
+            document.getElementById('balanceDisplay').textContent = balance.toFixed(2);
+        }
+
+        function showMainSection() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            document.getElementById('userDisplay').textContent = currentUser.username;
+            updateBalance(currentUser.balance);
+        }
+
+        function refreshData() {
+            getTransactions();
+            getSavingsGoals();
+            loadVisualizations();
+        }
+
+        // Set today's date as default for date inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            document.getElementById('targetDate').value = today;
+        });
+    </script>
+</body>
+</html>
