@@ -1,4 +1,4 @@
-Here’s a `README.md` file with the instructions you requested:
+`README.md` file:
 
 ```markdown
 # Python Flask Application
