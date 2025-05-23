@@ -119,10 +119,10 @@
                         <h4>Savings Progress</h4>
                         <img id="savingsChart" alt="Savings Progress">
                     </div>
-                    <div class="chart-container">
+                    <!-- <div class="chart-container">
                         <h4>Weekly Budget</h4>
                         <img id="weeklyChart" alt="Weekly Budget">
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -283,7 +283,7 @@
             document.getElementById('categoryChart').src = `http://localhost:5000/visualize/category_distribution?username=${currentUser.username}&days=${days}`;
             document.getElementById('monthlyChart').src = `http://localhost:5000/visualize/monthly_trends?username=${currentUser.username}&days=${days}`;
             document.getElementById('savingsChart').src = `http://localhost:5000/visualize/savings_progress?username=${currentUser.username}`;
-            document.getElementById('weeklyChart').src = `http://localhost:5000/visualize/weekly_budget?username=${currentUser.username}`;
+            // document.getElementById('weeklyChart').src = `http://localhost:5000/visualize/weekly_budget?username=${currentUser.username}`;
         }
 
         // Display Functions

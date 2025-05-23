@@ -8,14 +8,17 @@ import matplotlib.pyplot as plt
 import io
 import seaborn as sns
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
+import matplotlib
+matplotlib.use('Agg')
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 db_manager = DatabaseManager()
+if __name__ == "__main__":
 
-def dict_factory(cursor, row):
+
+ def dict_factory(cursor, row):
     """Convert sqlite3 row to dictionary"""
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -121,25 +124,25 @@ def add_transaction():
             conn.commit()
 
             # Check if any savings goals are linked to this category
-            if transaction_type == 'income':
-                cursor.execute('''
-                    SELECT * FROM savings_goals 
-                    WHERE user_id = ? AND category = ? AND current_amount < target_amount
-                ''', (user_id, category))
-                savings_goal = cursor.fetchone()
+            # if transaction_type == 'income':
+            #     cursor.execute('''
+            #         SELECT * FROM savings_goals 
+            #         WHERE user_id = ? AND current_amount < target_amount
+            #     ''', (user_id, category))
+            #     savings_goal = cursor.fetchone()
                 
-                if savings_goal:
-                    # Calculate amount to save (e.g., 10% of income)
-                    saving_amount = min(amount * 0.1, 
-                                     savings_goal[3] - savings_goal[2])  # target_amount - current_amount
+            #     if savings_goal:
+            #         # Calculate amount to save (e.g., 10% of income)
+            #         saving_amount = min(amount * 0.1, 
+            #                          savings_goal[3] - savings_goal[2])  # target_amount - current_amount
                     
-                    cursor.execute('''
-                        UPDATE savings_goals 
-                        SET current_amount = current_amount + ? 
-                        WHERE id = ?
-                    ''', (saving_amount, savings_goal[0]))
+            #         cursor.execute('''
+            #             UPDATE savings_goals 
+            #             SET current_amount = current_amount + ? 
+            #             WHERE id = ?
+            #         ''', (saving_amount, savings_goal[0]))
                     
-                    conn.commit()
+            #         conn.commit()
 
         return jsonify({
             "message": "Transaction added successfully",
