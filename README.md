@@ -25,7 +25,7 @@ env\Scripts\activate
 python3 -m venv env
 source env/bin/activate
 ```
-I f you are using python 3.13 use py -m ven venv
+If you are using python 3.13, use py -m venv venv
 ### 2. Install Requirements
 Ensure your virtual environment is activated, then install the dependencies from the provided `requirements.txt` file:
 
