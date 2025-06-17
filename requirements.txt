@@ -1,6 +1,5 @@
 Flask
 flask-cors
-sqlite3
 pandas
 matplotlib
 seaborn
