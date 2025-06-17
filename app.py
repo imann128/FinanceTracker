@@ -15,10 +15,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 db_manager = DatabaseManager()
-if __name__ == "__main__":
 
-
- def dict_factory(cursor, row):
+def dict_factory(cursor, row):
     """Convert sqlite3 row to dictionary"""
     d = {}
     for idx, col in enumerate(cursor.description):
