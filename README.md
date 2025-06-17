@@ -50,7 +50,7 @@ To simplify testing, two sample entries have been preloaded into the database:
 - **Username:** `johndoe`  
   **Password:** `password123`
 
-However, you can register for an account yourself by using the register button. The preset account already has already been used multiple times for testing.  
+However, you can register for an account yourself by using the register button. The preset account has already been used multiple times for testing.  
 
 Feel free to log in with the provided credentials or create your own.
 
